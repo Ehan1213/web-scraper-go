@@ -1,13 +1,23 @@
 package main
 
 import (
-	"errors"
+	"fmt"
+	"log"
+	"net/url"
+	"strings"
 )
 
-func normalizeURL(url string) (_ string, err error) {
-	if url == "" {
-		return "", errors.New("empty url")
+func normalizeURL(URL string) (_ string, err error) {
+	if URL == "" {
+		return "", err
+
+	}
+	clean := strings.TrimSpace(URL)
+	url, err := url.ParseRequestURI(clean)
+	if err != nil {
+		log.Fatal(err)
+		return url.Scheme, err
 	}
 
-	return "nil", err
+	return fmt.Sprintf("%s%s", url.Host, url.Path), err
 }

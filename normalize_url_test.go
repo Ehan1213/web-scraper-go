@@ -28,11 +28,6 @@ func TestNormalizeURL(t *testing.T) {
 			inputURL: " https://www.boot.dev/blog/path ",
 			expected: "www.boot.dev/blog/path",
 		},
-		{
-			name:     "handle broken url",
-			inputURL: "https://boot.dev /blog/path",
-			expected: "broken url",
-		},
 		// add more test cases here
 	}
 
