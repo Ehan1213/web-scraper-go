@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -111,4 +113,52 @@ func TestFirstParagraphFromHTML(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetURLsFromHTMLAbsolute(t *testing.T) {
+	tests := []struct {
+		name          string
+		inputURL      string
+		inputBody     string
+		expected      []string
+		errorContains string
+	}{
+		{
+			name:      "pull single href",
+			inputURL:  "https://crawler-test.com",
+			inputBody: `<html><body><a href="https://crawler-test.com"><span>Boot.dev</span></a></body></html>`,
+			expected:  []string{"https://crawler-test.com"},
+		},
+		{
+			name:      "pull multiple href",
+			inputURL:  "https://crawler-test.com",
+			inputBody: `<html><body><a href="https://crawler-test.com"><span>Boot.dev</span></a><a href="https://crawler-test1.com"><span>Boot.dev</span></a><a href="https://crawler-test2.com"><span>Boot.dev</span></a></body></html>`,
+			expected:  []string{"https://crawler-test.com", "https://crawler-test1.com", "https://crawler-test2.com"},
+		},
+		{
+			name:      "relative to absolute",
+			inputURL:  "https://crawler-test.com",
+			inputBody: `<html><body><a href="/my-file-1"><span>file1</span></a></body></html>`,
+			expected:  []string{"https://crawler-test.com/my-file-1"},
+		},
+	}
+	for i, tc := range tests {
+		baseURL, err := url.Parse(tc.inputURL)
+		if err != nil {
+			t.Errorf("couldn't parse input URL: %v", err)
+			return
+		}
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := getURLsFromHTML(tc.inputBody, baseURL)
+			if err != nil {
+				t.Errorf("Test %v - '%s' FAIL: unexpected error: %v", i, tc.name, err)
+				return
+			}
+
+			if !reflect.DeepEqual(actual, tc.expected) {
+				t.Errorf("expected %v, got %v", tc.expected, actual)
+			}
+		})
+	}
+
 }
