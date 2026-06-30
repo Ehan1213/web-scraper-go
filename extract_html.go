@@ -46,9 +46,34 @@ func getURLsFromHTML(html string, baseURL *url.URL) ([]string, error) {
 	if err != nil {
 		return []string{html}, err
 	}
+	/*
+		extract absolute URL translation into a helper function later
+		it is very easy to have a as a pure function the parsers can call
+	*/
 	absoluteURLS := []string{}
 	doc.Find("a[href]").Each(func(_ int, s *goquery.Selection) {
 		link, ok := s.Attr("href")
+		if !ok {
+			return
+		}
+		parsedHref, err := url.Parse(link)
+		if err != nil {
+			return
+		}
+		absolute := baseURL.ResolveReference(parsedHref).String()
+		absoluteURLS = append(absoluteURLS, absolute)
+	})
+	return absoluteURLS, err
+}
+
+func getImagesFromHTML(html string, baseURL *url.URL) ([]string, error) {
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		return []string{html}, err
+	}
+	absoluteURLS := []string{}
+	doc.Find("img").Each(func(_ int, s *goquery.Selection) {
+		link, ok := s.Attr("src")
 		if !ok {
 			return
 		}
